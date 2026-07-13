@@ -1,3 +1,5 @@
+from urllib import response
+
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.tools import tool
@@ -6,7 +8,10 @@ from langchain_core.prompts import PromptTemplate
 from langchain_ollama import ChatOllama
 from tavily import TavilyClient
 from langchain_tavily import TavilySearch
+from LearnPydantic import AgentResponse, Source
+from langchain.agents.structured_output import ToolStrategy
 
+from pprint import pprint
 
 load_dotenv()
 
@@ -25,6 +30,7 @@ def search1(query: str) -> str:
 
 
 tavily_client = TavilyClient()
+
 @tool
 def search(query: str) -> str:
     """
@@ -66,15 +72,35 @@ def call_ollama_test_with_tool2():
     print(response)
 
 
+def call_ollama_test_with_tool3():
+    # we are here using in house tool of tavily, no need to create the search method as did in the previous function, 
+    # with response format defined in LearnPydantic.py
+    tools=[TavilySearch()]
+    agent = create_agent(
+    model=llm,
+    tools=[TavilySearch()],
+    response_format=ToolStrategy(AgentResponse),)
+    response= agent.invoke({"messages":HumanMessage(content="What is the weather in Yamunanagar today?")}, 
+                           response_format=ToolStrategy(AgentResponse))
+    #print(response["structured_response"])
+    pprint(response)
+    print(type(response))
+
+    if isinstance(response, dict):
+        print(response.keys())
+
+
 def main():
     print("Hello from langchain-me!")
 
-    print("call_ollama_test_with_tool1 with tavily client search method")
-    call_ollama_test_with_tool1()
+    #print("call_ollama_test_with_tool1 with tavily client search method")
+    #call_ollama_test_with_tool1()
 
-    print("call_ollama_test_with_tool2 with tavily search tool")
-    call_ollama_test_with_tool2()
+    #print("call_ollama_test_with_tool2 with tavily search tool")
+    #call_ollama_test_with_tool2()
   
+    print("call_ollama_test_with_tool3 with tavily search tool")
+    call_ollama_test_with_tool3()
 
 if __name__ == "__main__":
     main()
